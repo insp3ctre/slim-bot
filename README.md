@@ -8,7 +8,8 @@ Slim will web scrape the [Confirmed Cases Status Report](https://college.lclark.
 
 ### Clone the repository
 If you would like to clone the repository for yourself, you will have to create 2 files which have intentially been excluded from Git.
-- connection.py: this file should include 3 variables
+- connection.py: a Python file for storing confidential login info. It should contain the following three string variables:
 	- sender: the email that the emails will be sent from
 	- receiver: the email (or group email) that the email will be sent to
 	- password: an app password created from Google (see [here](https://support.google.com/accounts/answer/185833?hl=en))
+- cases.txt: a blank text file for storing the previous case count
