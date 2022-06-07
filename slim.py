@@ -1,39 +1,47 @@
-import requests
+import requests, smtplib, ssl
+from connection import sender, receiver, password
 from bs4 import BeautifulSoup
 
-file = open("cases.txt", "a+")
+def caseCount(): # get cases and return change
+	cases = open("cases.txt", "r")
+	URL = "https://college.lclark.edu/offices/health_promotion_and_wellness/covid-resources/list/"
 
-URL = "https://college.lclark.edu/offices/health_promotion_and_wellness/covid-resources/list/"
-page = requests.get(URL)
+	page = requests.get(URL)
 
+	soup = BeautifulSoup(page.content, "html.parser")
+	results = soup.find(id = "lw_widget_b03fe531") # id for the spot on the site with the current undergrad cases
+	elements = results.find_all("div", class_="table-cell")
 
+	for element in elements: # get all part of the table cell (only runs once but has to be like this I think)
+		current_case = element.find("span", class_ = "lw_profiles_667")
+		if current_case == None:
+			continue
+		new = current_case.text.strip()
+		break
 
-soup = BeautifulSoup(page.content, "html.parser")
-results = soup.find(id = "lw_widget_b03fe531")
-elements = results.find_all("div", class_="table-cell")
+	newInt = int(new)
+	previous = int(cases.read()) # case count from last time the count was queried
+	if newInt > previous:
+		message = f"There are a total of {newInt} cases. This is a {newInt-previous} increase from last week."
+	elif previous > newInt:
+		message = f"There are a total of {newInt} cases. This is a {previous-newInt} decrease from last week."
+	else:
+		message = f"There has been no change from last week. There are still {newInt} cases."
 
-for element in elements:
-	current_case = element.find("span", class_ = "lw_profiles_667")
-	if current_case == None:
-		continue
-	# print(current_case.text.strip())
-	file.write(current_case.text.strip())
-	file.write("\n")
-	break
+	cases.close()
+	cases = open("cases.txt", "w")
+	cases.write(new) # replace old count with new count
+	cases.close()
+	return message
 
-lines = file.readlines()
+message = caseCount()
 
-print(lines)
+# send email
+port = 465
+server = "smtp.gmail.com"
+context = ssl.create_default_context()
+with smtplib.SMTP_SSL(server, port, context=context) as server:
+	server.login(sender, password)
+	server.sendmail(sender, receiver, message)
 
-
-if (int(lines[-2]) > int(lines[-3])):
-	delta = int(lines[-2]) - int(lines[-3])
-	print(f"{lines[-2]} case(s) this week.\n{delta} case increase.")
-elif (lines[-2] < lines[-3]):
-	delta = int(lines[-3]) - int(lines[-2])
-	print(f"{lines[-2]} case(s) this week.\n{delta} case decrease.")
-else:
-	print("No change in cases.")
-
-
-file.close()
+print("Email sent!")

@@ -130,5 +130,14 @@ dmypy.json
 
 #########
 
+# virtual environment
 bot/
+
+# file for storing previous case count
 cases.txt
+
+# file for testing
+test.py
+
+# file for storing account info
+connection.py
